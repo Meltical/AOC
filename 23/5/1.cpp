@@ -36,11 +36,18 @@ int main()
             rules.push_back({ds, ss, r});
         }
 
+        vector<int> visited;
         for (int i = 0; i < input.size(); i++)
         {
             for (auto &rule : rules)
-                if (input[i] >= rule[1] && input[i] <= rule[1] + rule[2] - 1)
+            {
+                bool valid = find(begin(visited), end(visited), i) != end(visited);
+                if (!valid && input[i] >= rule[1] && input[i] <= rule[1] + rule[2] - 1)
+                {
+                    visited.push_back(i);
                     input[i] = input[i] - rule[1] + rule[0];
+                }
+            }
         }
     }
 
@@ -49,3 +56,4 @@ int main()
     file.close();
     return 0;
 }
+// 111627841
