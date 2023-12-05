@@ -5,13 +5,13 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
+typedef unsigned int uint;
 
 int main()
 {
     string line;
     ifstream file("input");
     getline(file, line);
-    vector<vector<uint>> seeds;
     vector<vector<uint>> input;
 
     istringstream iss(line.substr(line.find(":") + 2));
@@ -19,10 +19,8 @@ int main()
     {
         uint source = stoul(line);
         getline(iss, line, ' ');
-        uint range = stoul(line);
-
-        seeds.push_back({source, range});
-        input.push_back({source, range});
+        uint len = stoul(line);
+        input.push_back({source, len});
     }
 
     for (int i = 0; i < 7; i++)
@@ -35,54 +33,48 @@ int main()
         {
             iss = istringstream(line);
             getline(iss, line, ' ');
-            uint ds = stoul(line);
+            uint dest = stoul(line);
             getline(iss, line, ' ');
-            uint ss = stoul(line);
+            uint source = stoul(line);
             getline(iss, line, ' ');
-            uint r = stoul(line);
+            uint len = stoul(line);
 
-            rules.push_back({ds, ss, r});
+            rules.push_back({dest, source, len});
         }
 
-        vector<int> visited;
-        for (int i = 0; i < input.size(); i++)
+        vector<vector<uint>> newInputs;
+        for (int j = 0; j < input.size(); j++)
         {
             for (auto &rule : rules)
             {
-                bool valid = find(begin(visited), end(visited), i) != end(visited);
-                uint dest = rule[0];
                 uint source = rule[1];
-                uint range = rule[2];
-                uint inputSource = input[i][0];
-                uint inputRange = input[i][1];
-                uint start = max(source, inputSource);
-                uint end = min(source + range, inputSource + inputRange);
-                if (start < end)
+                uint len = rule[2];
+                uint dest = rule[0];
+                uint inputSource = input[j][0];
+                uint inputLen = input[j][1];
+                if (inputSource >= source && inputSource + inputLen - 1 <= source + len - 1)
                 {
-                    valid = true;
-                    uint newSource = dest + start - source;
-                    uint newRange = end - start;
-                    input.push_back({newSource, newRange});
+                    newInputs.push_back({dest, inputLen});
                 }
+                else if (inputSource + inputLen - 1 < source || inputSource > source + len - 1)
+                {
+                    newInputs.push_back(input[j]);
+                }
+                // Verify overlaps ...
             }
         }
+
+        input = newInputs;
     }
-    // for (auto &i : input)
-    // {
-    //     cout << i[0] << " " << i[1] << endl;
-    // }
-    // uint s = 1e9;
-    // for (int i = 0; i < seeds.size(); i++)
-    // {
-    //     for (int j = 0; j < input.size(); j++)
-    //     {
-    //         if (seeds[i] == input[j] && seeds[i] < s)
-    //         {
-    //             s = seeds[i];
-    //         }
-    //     }
-    // }
-    // cout << s << endl;
+
+    for (auto &i : input)
+        cout << "input: " << i[0] << " " << i[1] << endl;
+
+    uint s = input[0][0];
+    for (int i = 1; i < input.size(); i++)
+        if (input[i][0] < s)
+            s = input[i][0];
+    cout << s << endl;
 
     file.close();
     return 0;
