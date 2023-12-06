@@ -47,49 +47,52 @@ int main()
         vector<vector<uint>> remainingInputs = inputs;
         for (auto &rule : rules)
         {
-            cout << "> rule: " << rule[0] << " " << rule[1] << " " << rule[2] << endl;
             for (int j = 0; j < inputs.size(); j++)
             {
-                uint source = rule[1];
-                uint len = rule[2];
-                uint dest = rule[0];
                 uint inputSource = inputs[j][0];
                 uint inputLen = inputs[j][1];
                 uint inputEnd = inputSource + inputLen - 1;
+                if (inputLen == 0)
+                    continue;
+                uint source = rule[1];
+                uint len = rule[2];
+                uint dest = rule[0];
                 uint ruleEnd = source + len - 1;
                 if (inputSource >= source && inputEnd <= ruleEnd)
                 {
                     uint offset = inputSource - source;
                     newInputs.push_back({dest + offset, inputLen});
-                    cout << "overlap all: " << dest + offset << " " << inputLen << endl;
+                    inputs[j][1] = 0;
                 }
-                else if (inputSource > source && inputEnd < ruleEnd)
+                else if (inputSource < source && inputEnd > ruleEnd)
                 {
                     newInputs.push_back({dest, len});
-                    cout << "overlap part: " << dest << " " << len << endl;
+                    inputs[j][1] = 0;
+                    inputs.push_back({inputSource, source - inputSource});
+                    inputs.push_back({ruleEnd, inputEnd - ruleEnd});
                 }
                 else if (inputSource < ruleEnd && inputEnd > ruleEnd)
                 {
                     uint leftOffset = inputSource - source;
                     uint rightOffset = inputEnd - ruleEnd;
                     newInputs.push_back({dest + leftOffset, inputLen - rightOffset});
-                    cout << "upper: " << dest + leftOffset << " " << inputLen - rightOffset << endl;
+                    inputs[j] = {ruleEnd + 1, inputEnd - ruleEnd};
                 }
                 else if (inputSource < source && inputEnd > source)
                 {
                     uint leftOffset = source - inputSource;
                     newInputs.push_back({dest, inputLen - leftOffset});
-                    cout << "lower: " << dest << " " << inputLen - leftOffset << endl;
+                    inputs[j] = {inputSource, source - inputSource};
                 }
             }
         }
 
+        for (auto &i : inputs)
+            if (i[1] > 0)
+                newInputs.push_back(i);
+
         if (newInputs.size() > 0)
             inputs = newInputs;
-
-        for (auto &i : inputs)
-            cout << "input: " << i[0] << " " << i[1] << endl;
-        cout << endl;
     }
 
     uint s = inputs[0][0];
@@ -101,3 +104,4 @@ int main()
     file.close();
     return 0;
 }
+// 69323688
