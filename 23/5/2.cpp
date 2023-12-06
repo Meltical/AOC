@@ -12,7 +12,7 @@ int main()
     string line;
     ifstream file("input");
     getline(file, line);
-    vector<vector<uint>> input;
+    vector<vector<uint>> inputs;
 
     istringstream iss(line.substr(line.find(":") + 2));
     while (getline(iss, line, ' '))
@@ -20,13 +20,14 @@ int main()
         uint source = stoul(line);
         getline(iss, line, ' ');
         uint len = stoul(line);
-        input.push_back({source, len});
+        inputs.push_back({source, len});
     }
+
+    getline(file, line); // Skip line
 
     for (int i = 0; i < 7; i++)
     {
-        getline(file, line);
-        getline(file, line);
+        getline(file, line); // Skip line
 
         vector<vector<uint>> rules;
         while (getline(file, line) && isdigit(line[0]))
@@ -43,37 +44,58 @@ int main()
         }
 
         vector<vector<uint>> newInputs;
-        for (int j = 0; j < input.size(); j++)
+        vector<vector<uint>> remainingInputs = inputs;
+        for (auto &rule : rules)
         {
-            for (auto &rule : rules)
+            cout << "> rule: " << rule[0] << " " << rule[1] << " " << rule[2] << endl;
+            for (int j = 0; j < inputs.size(); j++)
             {
                 uint source = rule[1];
                 uint len = rule[2];
                 uint dest = rule[0];
-                uint inputSource = input[j][0];
-                uint inputLen = input[j][1];
-                if (inputSource >= source && inputSource + inputLen - 1 <= source + len - 1)
+                uint inputSource = inputs[j][0];
+                uint inputLen = inputs[j][1];
+                uint inputEnd = inputSource + inputLen - 1;
+                uint ruleEnd = source + len - 1;
+                if (inputSource >= source && inputEnd <= ruleEnd)
                 {
-                    newInputs.push_back({dest, inputLen});
+                    uint offset = inputSource - source;
+                    newInputs.push_back({dest + offset, inputLen});
+                    cout << "overlap all: " << dest + offset << " " << inputLen << endl;
                 }
-                else if (inputSource + inputLen - 1 < source || inputSource > source + len - 1)
+                else if (inputSource > source && inputEnd < ruleEnd)
                 {
-                    newInputs.push_back(input[j]);
+                    newInputs.push_back({dest, len});
+                    cout << "overlap part: " << dest << " " << len << endl;
                 }
-                // Verify overlaps ...
+                else if (inputSource < ruleEnd && inputEnd > ruleEnd)
+                {
+                    uint leftOffset = inputSource - source;
+                    uint rightOffset = inputEnd - ruleEnd;
+                    newInputs.push_back({dest + leftOffset, inputLen - rightOffset});
+                    cout << "upper: " << dest + leftOffset << " " << inputLen - rightOffset << endl;
+                }
+                else if (inputSource < source && inputEnd > source)
+                {
+                    uint leftOffset = source - inputSource;
+                    newInputs.push_back({dest, inputLen - leftOffset});
+                    cout << "lower: " << dest << " " << inputLen - leftOffset << endl;
+                }
             }
         }
 
-        input = newInputs;
+        if (newInputs.size() > 0)
+            inputs = newInputs;
+
+        for (auto &i : inputs)
+            cout << "input: " << i[0] << " " << i[1] << endl;
+        cout << endl;
     }
 
-    for (auto &i : input)
-        cout << "input: " << i[0] << " " << i[1] << endl;
-
-    uint s = input[0][0];
-    for (int i = 1; i < input.size(); i++)
-        if (input[i][0] < s)
-            s = input[i][0];
+    uint s = inputs[0][0];
+    for (int i = 1; i < inputs.size(); i++)
+        if (inputs[i][0] < s)
+            s = inputs[i][0];
     cout << s << endl;
 
     file.close();
