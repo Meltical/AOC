@@ -3,13 +3,13 @@
 #include <sstream>
 #include <regex>
 using namespace std;
-typedef unsigned long ul;
+typedef unsigned long long ull;
 
 int main()
 {
     string line;
     ifstream file("input");
-    ul time, distance;
+    ull time, distance;
     for (int i = 0; i < 2; i++)
     {
         getline(file, line);
@@ -17,18 +17,18 @@ int main()
         string num;
         while (regex_search(line, match, regex("\\d+")))
         {
-            ul number = stoul(match.str());
+            ull number = stoull(match.str());
             num += match.str();
             line = match.suffix().str();
         }
 
         if (i == 0)
-            time = stoul(num);
+            time = stoull(num);
         else
-            distance = stoul(num);
+            distance = stoull(num);
     }
 
-    ul i = 0;
+    ull i = 0;
     while (i * (time - i) < distance)
         i++;
 
