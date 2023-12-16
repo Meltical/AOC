@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include <set>
+#include <functional>
 using namespace std;
 
 enum class Dir
@@ -71,27 +72,26 @@ void slide(vector<string> &m, Dir dir)
     }
 }
 
-// Could probably find a better hash function (in fact this isn't a hash function) to improve performance
-string hash(vector<string> m)
+size_t hashMatrix(vector<string> m)
 {
     string h = "";
     for (int i = 0; i < m.size(); i++)
         for (int j = 0; j < m[i].size(); j++)
             h += m[i][j];
-    return h;
+    return hash<string>{}(h);
 }
 
 int solve(vector<string> &m)
 {
     int s = 0;
-    vector<string> hashes{::hash(m)};
+    vector<size_t> hashes{hashMatrix(m)};
     for (int i = 1; i <= 1000000000; i++)
     {
         slide(m, Dir::Up);
         slide(m, Dir::Left);
         slide(m, Dir::Down);
         slide(m, Dir::Right);
-        string h = ::hash(m);
+        size_t h = hashMatrix(m);
         auto pos = find(hashes.begin(), hashes.end(), h);
         if (pos != hashes.end())
         {
