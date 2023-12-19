@@ -49,10 +49,76 @@ struct Rule
     }
 };
 
+void logWorkflow(map<string, vector<Rule>> &workflows)
+{
+    for (auto &workflow : workflows)
+    {
+        cout << workflow.first << ": ";
+        for (auto &rule : workflow.second)
+            cout << rule << " ";
+        cout << endl;
+    }
+}
+
+void logInput(vector<map<char, int>> &inputs)
+{
+    for (auto &input : inputs)
+    {
+        for (auto &pair : input)
+            cout << pair.first << " " << pair.second << " ";
+        cout << endl;
+    }
+}
+
+int solve(map<string, vector<Rule>> &workflows, vector<map<char, int>> &inputs)
+{
+    int s = 0;
+    for (auto &input : inputs)
+    {
+        bool running = true;
+        string nextWorkflowKey = "in";
+        while (running)
+        {
+            auto wf = workflows[nextWorkflowKey];
+            auto handleResult = [&](Rule &rule)
+            {
+                if (rule.endingState.has_value())
+                {
+                    if (rule.endingState.value() == 'A')
+                    {
+                        for (auto i : input)
+                            s += i.second;
+                    }
+                    running = false;
+                }
+                if (rule.nextWorkflowKey.has_value())
+                {
+                    nextWorkflowKey = rule.nextWorkflowKey.value();
+                }
+            };
+            for (auto &rule : wf)
+            {
+                if (rule.key.has_value() && rule.value.has_value() && rule.greaterThan.has_value())
+                {
+                    if ((input[rule.key.value()] > rule.value.value() && rule.greaterThan.value()) || (input[rule.key.value()] < rule.value.value() && !rule.greaterThan.value()))
+                    {
+                        handleResult(rule);
+                        break;
+                    }
+                    else
+                        continue;
+                }
+                handleResult(rule);
+            }
+        }
+    }
+    return s;
+}
+
 int main()
 {
     string line, rule;
-    ifstream file{"shortinput"};
+    ifstream file{"input"};
     map<string, vector<Rule>> workflows;
     while (getline(file, line) && !line.empty())
     {
@@ -66,12 +132,16 @@ int main()
         }
     }
 
-    for (auto &workflow : workflows)
+    vector<map<char, int>> inputs;
+    while (getline(file, line))
     {
-        cout << workflow.first << ": ";
-        for (auto &rule : workflow.second)
-            cout << rule << " ";
-        cout << endl;
+        istringstream iss{line.substr(1, line.size() - 2)};
+        inputs.emplace_back();
+        while (getline(iss, rule, ','))
+            inputs.back()[rule[0]] = stoi(rule.substr(2));
     }
+
+    cout << solve(workflows, inputs) << endl;
+
     return 0;
 }
