@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <map>
 using namespace std;
 
 enum State
@@ -24,7 +25,15 @@ public:
     string name;
     vector<string> outputNames = {};
     vector<Module *> outputs = {};
-    virtual void operate(Pulse pulse) = 0;
+    virtual void operate(string emitterName, Pulse pulse) = 0;
+    void sendPulse(Pulse pulse)
+    {
+        for (auto &output : outputs)
+        {
+            cout << name << " [" << pulse << "] -> " << output->name << '\n';
+            output->operate(name, pulse);
+        }
+    }
     Module(string name, vector<string> outputNames)
     {
         this->name = name;
@@ -43,38 +52,40 @@ class FlipFlop : public Module
 public:
     FlipFlop(string name, vector<string> outputNames) : Module(name, outputNames) {}
     State state = OFF;
-    void operate(Pulse pulse)
+    void operate(string emitterName, Pulse pulse)
     {
         if (pulse == HIGH)
             return;
         state = state == ON ? OFF : ON;
         Pulse pulseOut = state == ON ? HIGH : LOW;
-        for (auto &output : outputs)
-        {
-            cout << name << " [" << pulseOut << "] -> " << output->name << '\n';
-            output->operate(pulseOut);
-        }
+        sendPulse(pulseOut);
     }
 };
 class Conjunction : public Module
 {
+private:
+    map<string, Pulse> receivedPulses = {};
+
 public:
     Conjunction(string name, vector<string> outputNames) : Module(name, outputNames) {}
-    void operate(Pulse pulse)
+    void operate(string emitterName, Pulse pulse)
     {
+        receivedPulses[emitterName] = pulse;
+        for (auto &p : receivedPulses)
+            if (find_if(receivedPulses.begin(), receivedPulses.end(), [](pair<string, Pulse> p)
+                        { return p.second == LOW; }) != receivedPulses.end())
+                sendPulse(HIGH);
+            else
+                sendPulse(LOW);
     }
 };
 class Broadcaster : public Module
 {
 public:
     Broadcaster(vector<string> outputNames) : Module("broadcaster", outputNames) {}
-    void operate(Pulse pulse)
+    void operate(string emitterName, Pulse pulse)
     {
-        for (auto &output : outputs)
-        {
-            cout << name << " [" << pulse << "] -> " << output->name << '\n';
-            output->operate(pulse);
-        }
+        sendPulse(pulse);
     }
 };
 
@@ -116,7 +127,7 @@ int main()
                 if (output->name == outputName)
                     module->outputs.push_back(output);
 
-    broadcaster->operate(LOW);
+    broadcaster->operate(broadcaster->name, LOW);
 
     delete broadcaster;
     return 0;
