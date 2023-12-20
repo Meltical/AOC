@@ -9,7 +9,9 @@ using namespace std;
 
 class Module;
 queue<Module *> q;
-int l = 0, h = 0;
+int s = 0;
+vector<string> highReached = {};
+const vector<string> con{"lk", "zv", "sp", "xt"};
 
 enum State
 {
@@ -43,7 +45,6 @@ public:
         for (auto &output : outputs)
         {
             // cout << name << " [" << pulse << "] -> " << output->name << '\n';
-            pulse % 2 ? l++ : h++;
             output->pulseQ.push({emitter, pulse});
             q.push(output);
         }
@@ -93,11 +94,18 @@ public:
         auto item = pulseQ.front();
         pulseQ.pop();
         receivedPulses[item.emitter->name] = item.pulse;
+        Pulse pulseOut;
         if (find_if(receivedPulses.begin(), receivedPulses.end(), [](pair<string, Pulse> p)
                     { return p.second == LOW; }) != receivedPulses.end())
-            send(this, HIGH);
+            pulseOut = HIGH;
         else
-            send(this, LOW);
+            pulseOut = LOW;
+        if (s > 0 && pulseOut == HIGH && find(con.begin(), con.end(), name) != con.end() && find(highReached.begin(), highReached.end(), name) == highReached.end())
+        {
+            highReached.push_back(name);
+            cout << name << ": " << s << '\n';
+        }
+        send(this, pulseOut);
     }
 };
 class Broadcaster : public Module
@@ -167,9 +175,8 @@ main()
                     if (outputName == module->name)
                         dynamic_cast<Conjunction *>(module)->initializeMemory(output);
 
-    for (int i = 0; i < 1000; i++)
+    for (s = 1; s <= 4051; s++)
     {
-        l++;
         // cout << "button [LOW] -> broadcaster\n";
         broadcaster->receive(LOW);
         while (!q.empty())
@@ -180,10 +187,6 @@ main()
         }
     }
 
-    cout << l * h << '\n';
-
     delete broadcaster;
     return 0;
 }
-
-// 866435264
