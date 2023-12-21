@@ -10,18 +10,14 @@ struct Point
     int row, col;
     Point operator+(const Point &other) const
     {
-        return {static_cast<int>((row + other.row) % m.size()), static_cast<int>((col + other.col) % m[0].size())};
+        return {row + other.row, col + other.col};
     }
     bool operator<(const Point &other) const
     {
         return row < other.row || (row == other.row && col < other.col);
     }
-    bool isInBounds()
-    {
-        return col >= 0 && row >= 0 && col < m[0].size() && row < m.size();
-    }
 };
-set<Point> plots, oddPlots;
+set<Point> plots;
 struct DP
 {
     int row, col, step;
@@ -33,32 +29,31 @@ struct DP
 };
 set<DP> visited;
 Point UP{-1, 0}, DOWN{1, 0}, LEFT{0, -1}, RIGHT{0, 1};
-void solve(Point p, int step)
+void solve(Point p, int step, int maxStep)
 {
-    if (m[p.row][p.col] == '#')
-        return;
-    if (!p.isInBounds())
+    if (visited.find({p, step}) != visited.end())
         return;
 
-    if (find_if(visited.begin(), visited.end(), [p](DP dp)
-                { return dp.row == p.row && dp.col == p.col; }) != visited.end())
+    if (m[p.row % m.size()][p.col % m[0].size()] == '#')
         return;
 
     visited.insert({p, step});
-
-    if (visited.size() == 80)
+    if (step == maxStep)
+    {
+        plots.insert(p);
         return;
+    }
 
-    solve(p + UP, step + 1);
-    solve(p + DOWN, step + 1);
-    solve(p + LEFT, step + 1);
-    solve(p + RIGHT, step + 1);
+    solve(p + UP, step + 1, maxStep);
+    solve(p + DOWN, step + 1, maxStep);
+    solve(p + LEFT, step + 1, maxStep);
+    solve(p + RIGHT, step + 1, maxStep);
 }
 
 int main()
 {
     string line;
-    ifstream file{"shortinput"};
+    ifstream file{"input"};
     Point startingPoint;
     while (getline(file, line))
     {
@@ -67,15 +62,36 @@ int main()
             if (c == 'S')
                 startingPoint = {static_cast<int>(m.size() - 1), static_cast<int>(line.find(c))};
     }
-    // for (auto p : plots)
-    //     if ((p.row + p.col) % 2 == 1)
-    //         oddPlots.insert(p);
-    solve(startingPoint, 0);
+    solve(startingPoint, 0, 64);
+    int v1 = plots.size();
+    cout << v1 << endl;
 
-    for (auto p : visited)
-        cout << p.row << " " << p.col << " " << p.step << endl;
-    auto maxStepPlot = max_element(visited.begin(), visited.end(), [](DP a, DP b)
-                                   { return a.step < b.step; });
-    cout << maxStepPlot->row << " " << maxStepPlot->col << " " << maxStepPlot->step << endl;
+    plots.clear();
+    visited.clear();
+    solve(startingPoint, 0, 65 + m.size());
+    int v2 = plots.size();
+    cout << v2 << endl;
+
+    plots.clear();
+    visited.clear();
+    solve(startingPoint, 0, 65 + 2 * m.size());
+    int v3 = plots.size();
+    cout << v3 << endl;
+
+    int remainder = 26501365 % 131;
+    double a = (v1 - 2 * v2 + v3) / 2;
+    double b = (-3 * v1 + 4 * v2 - v3) / 2;
+    double c = v1;
+    int n = 26501365 / 131;
+
+    cout << "Equation: " << a << " n^2 + " << b << " n + " << c << ", with n = " << n << endl;
+
+    size_t res = a * n * n + b * n + c;
+    for (char c : to_string(res))
+        cout << c;
+    cout << endl;
+
     return 0;
 }
+// Doesn't work ...........................................
+//  637537341306357

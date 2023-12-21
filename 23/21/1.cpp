@@ -57,7 +57,7 @@ void solve(Point p, int step)
 int main()
 {
     string line;
-    ifstream file{"shortinput"};
+    ifstream file{"input"};
     Point startingPoint;
     while (getline(file, line))
     {
@@ -70,3 +70,5 @@ int main()
     cout << plots.size() << endl;
     return 0;
 }
+
+// 3847
