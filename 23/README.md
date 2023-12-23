@@ -8,11 +8,17 @@ Fill a region of connected points.
 
 [17] https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 
-Pathfinding algorithm.
+Pathfinding algorithm. Shortest path.
 
 https://en.wikipedia.org/wiki/A*_search_algorithm
 
 Extended version of Dijkstra's algorithm with a heuristic function to guide the search.
+
+[23]
+
+Manual recursion with stack.
+
+Pathfinding algorithm. Longest path.
 
 ## Optimization
 
